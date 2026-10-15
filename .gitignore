@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Ambiente / segredos
+.env
+.env.*
+
+# Modelos e cache do Hugging Face
+.cache/
+*.safetensors
+*.bin
+
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/
