@@ -3,6 +3,8 @@ from orchestrator.state import StateOrchestrator
 from orchestrator.node import OrchestratorNode
 from orchestrator.supervisor import SupervisorNode
 from services.llm.client import LLMClient
+from services.retrieval.retrieval_service import RetrievalService
+from services.response.response_service import ResponseService
 from agents.agent_sql import SQLAgent
 from agents.agent_rag import RAGAgent
 from agents.agent_ocr import OCRAgent
@@ -10,10 +12,13 @@ from agents.agent_ocr import OCRAgent
 
 class OrchestratorGraph():
     def __init__(self,):
+        llm = LLMClient().get_model()
         self.node = OrchestratorNode()
-        self.supervisor = SupervisorNode(LLMClient().get_model())
+        self.supervisor = SupervisorNode(llm)
+        self.retrieval_service = RetrievalService.from_env()
+        self.response_service = ResponseService(llm)
         self.sql_agent = SQLAgent()
-        self.rag_agent = RAGAgent()
+        self.rag_agent = RAGAgent(self.retrieval_service, self.response_service)
         self.ocr_agent = OCRAgent()
         self.app = self.route_graph()
 

@@ -7,6 +7,7 @@ venv/
 # Ambiente / segredos
 .env
 .env.*
+!.env.example
 
 # Modelos e cache do Hugging Face
 .cache/
@@ -17,3 +18,7 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+#data
+bulas_doc/
+docs/
