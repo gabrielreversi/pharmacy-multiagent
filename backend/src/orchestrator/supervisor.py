@@ -12,6 +12,13 @@ Agentes disponíveis:
 - rag: informações de bulas (dosagem, contraindicações, efeitos colaterais)
 - sql: dados de negócio (vendas, estoque, faturamento)
 - ocr: leitura de receitas em imagem
+Você também pode responder diretamente (respond), sem chamar agente, quando a mensagem for comum:
+saudação, agradecimento, conversa casual, dúvida sobre o que o assistente faz ou assunto fora do escopo.
+Regras do respond:
+- use apenas na primeira rodada, antes de qualquer agente responder
+- preencha answer com uma resposta curta e cordial em português
+- nunca responda sobre medicamentos, dosagens, estoque ou receitas com seu próprio conhecimento: isso é sempre rag, sql ou ocr
+- se o assunto for fora do escopo, diga educadamente que você ajuda com bulas, dados da farmácia e leitura de receitas
 Na primeira rodada, escolha o agente usando a pergunta e a classificação prévia
 (a classificação é uma pista, não uma verdade: se as probabilidades estiverem próximas, decida você).
 Nas rodadas seguintes, avalie a resposta do agente:
@@ -23,9 +30,11 @@ Nas rodadas seguintes, avalie a resposta do agente:
 
 
 class SupervisorDecision(BaseModel):
-    next: Literal["rag", "sql", "ocr", "finish"]
+    next: Literal["rag", "sql", "ocr", "respond", "finish"]
     reasoning: str = Field(description="Por que tomou essa decisão")
     instructions: str = Field(description="O que o agente deve fazer ou corrigir; vazio se finish")
+    answer: str = Field(description="Resposta direta ao usuário quando next for respond; vazio nos outros casos")
+
 
 class SupervisorNode:
     def __init__(self, llm):
@@ -43,6 +52,11 @@ class SupervisorNode:
             ("user", self._builder_context(state)),
         ])
 
+        if decision.next == "respond":
+            if outputs:
+                return Command(goto=END, update={"output": outputs[-1]["content"]})
+            answer = decision.answer.strip() or "Olá! Posso ajudar com informações de bulas, dados da farmácia e leitura de receitas."
+            return Command(goto=END, update={"output": answer})
         if decision.next == "finish" and outputs:
             return Command(goto=END, update={"output": outputs[-1]["content"]})
         if decision.next == "finish":
